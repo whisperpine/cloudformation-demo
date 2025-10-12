@@ -31,6 +31,9 @@ delete:
   aws cloudformation delete-stack \
     --region ap-southeast-1 \
     --stack-name MyStack
+  aws cloudformation wait stack-delete-complete \
+    --region ap-southeast-1 \
+    --stack-name MyStack
 
 # detect-stack-drift
 drift:
