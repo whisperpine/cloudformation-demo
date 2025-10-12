@@ -33,6 +33,7 @@
               [
                 just # just a command runner
                 cocogitto # conventional commit toolkit
+                sops # simple tool for managing secrets
                 husky # managing git hooks
                 typos # check misspelling
               ]
