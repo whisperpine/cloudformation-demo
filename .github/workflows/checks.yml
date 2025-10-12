@@ -29,3 +29,13 @@ jobs:
       - name: Check the latest commit message
         shell: nix shell nixpkgs#cocogitto --quiet --command bash {0}
         run: cog check HEAD..HEAD
+
+  cfn-lint:
+    runs-on: ubuntu-latest
+    name: lint cloudformation templates
+    steps:
+      - uses: actions/checkout@v5
+      - uses: cachix/install-nix-action@v31
+      - name: Check the latest commit message
+        shell: nix shell nixpkgs#python313Packages.cfn-lint --quiet --command bash {0}
+        run: cfn-lint ./cloudformation/**/*.yaml
