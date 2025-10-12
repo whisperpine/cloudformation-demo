@@ -8,6 +8,9 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Ref BucketName
+      Tags:
+        - Key: repository
+          Value: cloudformation-demo
 Outputs:
   BucketName:
     Value: !Ref MyS3Bucket
