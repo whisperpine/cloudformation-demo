@@ -1,7 +1,6 @@
 {
   description = "A Nix-flake-based development environment";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  inputs.nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05";
 
   outputs =
     inputs:
@@ -28,18 +27,14 @@
         {
           default = pkgs.mkShell {
             # The Nix packages installed in the dev environment.
-            packages =
-              with pkgs;
-              [
-                just # just a command runner
-                cocogitto # conventional commit toolkit
-                sops # simple tool for managing secrets
-                husky # managing git hooks
-                typos # check misspelling
-              ]
-              ++ [
-                pkgs-stable.awscli2 # aws command line tool
-              ];
+            packages = with pkgs; [
+              just # just a command runner
+              cocogitto # conventional commit toolkit
+              sops # simple tool for managing secrets
+              husky # managing git hooks
+              typos # check misspelling
+              awscli2 # aws command line tool
+            ];
             # The shell script executed when the environment is activated.
             shellHook = ''
               # install git hook managed by husky
