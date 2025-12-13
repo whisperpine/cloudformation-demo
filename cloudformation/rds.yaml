@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: CloudFormation template to deploy a PostgreSQL RDS instance for a development environment with Secrets Manager
+
+Parameters:
+  DBName:
+    Type: String
+    Default: devdb
+    Description: The name of the database to create
+    MinLength: 1
+    MaxLength: 64
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription: Must begin with a letter and contain only alphanumeric characters
+  DBUsername:
+    Type: String
+    Default: admin
+    Description: The master username for the RDS instance
+    MinLength: 1
+    MaxLength: 16
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription: Must begin with a letter and contain only alphanumeric characters
+  SecretArn:
+    Type: String
+    Description: The ARN of the Secrets Manager secret containing the RDS master password
+    Default: arn:aws:secretsmanager:us-east-1:123456789012:secret:dev/rds/postgres/password-XXXXXX
+  VPCId:
+    Type: AWS::EC2::VPC::Id
+    Description: Select the VPC for the RDS instance
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Select at least two subnets in the VPC for the DB subnet group
+  AllowedCidrIp:
+    Type: String
+    Default: "0.0.0.0/0"
+    Description: CIDR/IP range allowed to access the RDS instance (modify for security)
+
+Resources:
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for RDS PostgreSQL instance
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: !Ref AllowedCidrIp
+      Tags:
+        - Key: Name
+          Value: rds-dev-security-group
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS instance
+      SubnetIds: !Ref SubnetIds
+      Tags:
+        - Key: Name
+          Value: rds-dev-subnet-group
+
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: dev-postgres-db
+      Engine: postgres
+      EngineVersion: "16.4"
+      DBInstanceClass: db.t3.micro
+      AllocatedStorage: 20
+      StorageType: gp2
+      DBName: !Ref DBName
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Sub "{{resolve:secretsmanager:${SecretArn}:SecretString:password}}"
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      PubliclyAccessible: true
+      MultiAZ: false
+      BackupRetentionPeriod: 1
+      DeleteAutomatedBackups: true
+      EnablePerformanceInsights: false
+      DeletionProtection: false
+      Tags:
+        - Key: Name
+          Value: dev-postgres-rds
+        - Key: Environment
+          Value: Development
+
+Outputs:
+  RDSEndpoint:
+    Description: Endpoint of the RDS instance
+    Value: !GetAtt RDSInstance.Endpoint.Address
+  RDSPort:
+    Description: Port of the RDS instance
+    Value: !GetAtt RDSInstance.Endpoint.Port
+  DBName:
+    Description: Database name
+    Value: !Ref DBName
