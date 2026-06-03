@@ -8,22 +8,17 @@
       supportedSystems = [
         "x86_64-linux"
         "aarch64-linux"
-        "x86_64-darwin"
         "aarch64-darwin"
       ];
       forEachSupportedSystem =
         f:
         inputs.nixpkgs.lib.genAttrs supportedSystems (
-          system:
-          f {
-            pkgs = import inputs.nixpkgs { inherit system; };
-            pkgs-stable = import inputs.nixpkgs-stable { inherit system; };
-          }
+          system: f { pkgs = import inputs.nixpkgs { inherit system; }; }
         );
     in
     {
       devShells = forEachSupportedSystem (
-        { pkgs, pkgs-stable }:
+        { pkgs }:
         {
           default = pkgs.mkShellNoCC {
             # The Nix packages installed in the dev environment.
